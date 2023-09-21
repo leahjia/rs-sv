@@ -16,10 +16,17 @@ fn main() {
 fn handle_connection(mut stream: TcpStream) {
     let mut buffer = [0; 1024];
     stream.read(&mut buffer).unwrap();
+    let get = b"GET / HTTP/1.1\r\n";
 
-    let content = fs::read_to_string("index.html").unwrap();
-
-    let response = format! {"HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}", content.len(), content};
-    stream.write(response.as_bytes()).unwrap();
-    stream.flush().unwrap();
+    if buffer.starts_with(get) {
+        let content = fs::read_to_string("index.html").unwrap();
+        let response = format! {"HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}", content.len(), content};
+        stream.write(response.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    } else {
+        let content = fs::read_to_string("404.html").unwrap();
+        let response = format! {"{}\r\nContent-Length: {}\r\n\r\n{}", "HTTP/1.1 404 NOT FOUND", content.len(), content};
+        stream.write(response.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    }
 }
